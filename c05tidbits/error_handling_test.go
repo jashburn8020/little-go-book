@@ -33,9 +33,8 @@ func process(lower int, upper int) (int, error) {
 }
 
 func TestLowerError(t *testing.T) {
-	_, err := process(0, 5)
-
-	if !(err != nil && err == LBE) {
+	// Initialised if: err is initialised prior to the condition being evaluated
+	if _, err := process(0, 5); !(err != nil && err == LBE) {
 		t.Error()
 	}
 }
