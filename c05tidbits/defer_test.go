@@ -5,20 +5,23 @@ import (
 	"testing"
 )
 
-// rune is an alias for int32, used, by convention, to distinguish character values from integer values.
-var record = make([]rune, 0, 5)
+type trace struct {
+	// rune is an alias for int32, used, by convention, to distinguish character values from integer
+	// values.
+	record []rune
+}
 
-func trace(ch rune) rune {
-	record = append(record, ch)
+func (tr *trace) trace(ch rune) rune {
+	tr.record = append(tr.record, ch)
 
 	return ch + 'z' - 'a'
 }
 
-func un(ch rune) {
-	record = append(record, ch)
+func (tr *trace) un(ch rune) {
+	tr.record = append(tr.record, ch)
 }
 
-func upper() {
+func (tr *trace) upper() {
 	/* defer statement schedules a function call (the deferred function) to be run immediately before
 	 * the function executing the defer returns, i.e., un() is run after lower().
 	 * The arguments to the deferred function are evaluated when the defer executes, not when the
@@ -26,21 +29,22 @@ func upper() {
 	 * from trace('A') as its argument.
 	 * If there are multiple defers in a function, they are executed in LIFO order.
 	 */
-	defer un(trace('A'))
-	record = append(record, 'M')
+	defer tr.un(tr.trace('A'))
+	tr.record = append(tr.record, 'M')
 
-	lower()
+	tr.lower()
 }
 
-func lower() {
-	defer un(trace('a'))
-	record = append(record, 'm')
+func (tr *trace) lower() {
+	defer tr.un(tr.trace('a'))
+	tr.record = append(tr.record, 'm')
 }
 
 func TestDefer(t *testing.T) {
-	upper()
+	tr := &trace{make([]rune, 0, 5)}
+	tr.upper()
 
-	if !reflect.DeepEqual([]rune{'A', 'M', 'a', 'm', 'z', 'Z'}, record) {
+	if !reflect.DeepEqual([]rune{'A', 'M', 'a', 'm', 'z', 'Z'}, tr.record) {
 		t.Error()
 	}
 }
